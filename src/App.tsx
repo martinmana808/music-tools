@@ -5,6 +5,7 @@ import TapTempo from './components/TapTempo';
 import Metronome from './components/Metronome';
 import Tuner from './components/Tuner';
 import Sequencer from './components/Sequencer';
+import PracticePlayer from './components/PracticePlayer';
 
 // Placeholder components
 const PlaceHolder = ({ title }: { title: string }) => (
@@ -14,13 +15,14 @@ const PlaceHolder = ({ title }: { title: string }) => (
 );
 
 function App() {
-  const [activeTab, setActiveTab] = useState<'tuner' | 'tempo' | 'metronome' | 'sequencer'>('tuner');
+  const [activeTab, setActiveTab] = useState<'tuner' | 'tempo' | 'metronome' | 'practice' | 'sequencer'>('tuner');
 
   const renderContent = () => {
     switch (activeTab) {
       case 'tuner': return <Tuner />;
       case 'tempo': return <TapTempo />;
       case 'metronome': return <Metronome />;
+      case 'practice': return <PracticePlayer />;
       case 'sequencer': return <Sequencer />;
       default: return <PlaceHolder title="Select a Tool" />;
     }
@@ -35,7 +37,7 @@ function App() {
       </header>
 
       <nav style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
-        {(['tuner', 'tempo', 'metronome', 'sequencer'] as const).map((tab) => (
+        {((['tuner', 'tempo', 'metronome', 'practice', 'sequencer'] as const)).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}

@@ -35,7 +35,7 @@ body {
   text-align: center;
 }
 
-button {
+button, .button {
   background-color: var(--surface-color);
   color: var(--text-main);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -46,6 +46,33 @@ button {
   font-family: inherit;
   cursor: pointer;
   transition: all var(--transition);
+}
+
+/* WaveSurfer Regions Overrides (Shadow DOM) */
+/* The Shadow Host is a child div inside .waveform-container, not the container itself */
+.waveform-container > div::part(region-handle) {
+  width: 9px !important;
+  background-color: #0275ff !important;
+  opacity: 1 !important;
+  z-index: 10;
+  cursor: ew-resize;
+  /* Grip texture */
+  background-image: repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,0,0,0.2) 2px, rgba(0,0,0,0.2) 3px);
+  background-size: 100% 100%;
+}
+
+.waveform-container > div::part(region-handle-left) {
+  border-radius: 6px 0 0 6px !important;
+  box-shadow: -2px 0 6px rgba(0,0,0,0.3);
+}
+
+.waveform-container > div::part(region-handle-right) {
+  border-radius: 0 6px 6px 0 !important;
+  box-shadow: 2px 0 6px rgba(0,0,0,0.3);
+}
+
+.waveform-container > div::part(region) {
+    opacity: 0.6 !important;
 }
 
 button:hover {
@@ -94,3 +121,5 @@ a:hover {
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
 }
+
+
