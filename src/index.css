@@ -123,3 +123,71 @@ a:hover {
 }
 
 
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  :root {
+      --border-radius: 8px;
+  }
+
+  #root {
+    padding: 1rem;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden; /* Prevent horizontal scroll */
+  }
+
+  h1 {
+      font-size: 1.8rem !important;
+  }
+  
+  h2 {
+      font-size: 1.5rem;
+  }
+
+  header {
+      margin-bottom: 1rem !important;
+  }
+
+  nav {
+      gap: 0.5rem !important;
+      margin-bottom: 1.5rem !important;
+  }
+  
+  nav button {
+      padding: 0.5em 0.8em;
+      font-size: 0.9em;
+      flex: 1 1 auto; /* Grow to fill space */
+  }
+
+  .glass-panel {
+      padding: 1rem;
+      width: 100%;
+  }
+
+  .grid-cols-2 {
+      grid-template-columns: 1fr; /* Stack columns */
+  }
+  
+  /* Make inputs and sliders easier to touch */
+  input[type="range"] {
+      height: 24px; 
+  }
+  
+  button, .button {
+      min-height: 44px; /* Touch target size */
+  }
+  
+  /* Stack control groups in Practice Player if they act up */
+  .control-group {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      width: 100%;
+  }
+}
+.sequencer-rows-container {
+  button {
+    min-height: 0!important;
+  }
+}

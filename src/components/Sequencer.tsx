@@ -163,10 +163,10 @@ export default function Sequencer() {
   };
 
   return (
-    <div className="glass-panel" style={{ maxWidth: '600px', margin: '0 auto' }}>
+    <div className="glass-panel" style={{ width: '100%', maxWidth: '800px', margin: '0 auto' }}>
       <h2 style={{ marginBottom: '1.5rem', textAlign: 'center' }}>8-Step Sequencer</h2>
 
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem', gap: '2rem', alignItems: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
           <button 
             onClick={togglePlay}
             style={{ 
@@ -191,10 +191,10 @@ export default function Sequencer() {
           </div>
       </div>
 
-      <div style={{ display: 'grid', gap: '0.5rem' }}>
+      <div className="sequencer-rows-container" style={{ display: 'grid', gap: '0.5rem' }}>
         {ROWS.map((name, rowIdx) => (
-            <div key={name} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                <div style={{ width: '60px', textAlign: 'right', marginRight: '0.5rem', fontWeight: 500, color: 'var(--text-muted)' }}>
+            <div key={name} style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
+                <div style={{ width: '50px', flexShrink: 0, textAlign: 'right', marginRight: '0.25rem', fontWeight: 500, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                     {name}
                 </div>
                 {Array(STEPS).fill(0).map((_, stepIdx) => (
@@ -202,8 +202,9 @@ export default function Sequencer() {
                         key={stepIdx}
                         onClick={() => toggleStep(rowIdx, stepIdx)}
                         style={{
-                            width: '40px',
-                            height: '40px',
+                            flex: 1,
+                            aspectRatio: '1/1',
+                            minWidth: 0,
                             padding: 0,
                             borderRadius: '4px',
                             background: grid[rowIdx][stepIdx] ? 'var(--primary-color)' : 'rgba(255,255,255,0.05)',

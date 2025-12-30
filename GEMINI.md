@@ -5,6 +5,12 @@
 - **Key Features**: Metronome, Tuner, Sequencer, Practice Player (Audio manipulation)
 
 ## History
+### [2025-12-29] Mobile UI & Metronome Enhancements | [Technical Details](./GEMINI--logs.md#log-20251229-mobile-metronome-polish)
+- Responsive UI for global app, Practice Player, and Sequencer.
+- Metronome Beat 1 accent (Pitch: 1200Hz).
+- Metronome Visual Sync with 50% duty cycle blinking.
+- Redesigned Loop Handles for better touch interaction.
+
 ### [2025-12-29] Practice Player & Metronome Trainer | [Technical Details](./GEMINI--logs.md#log-20251229-practice-player-metronome)
 - Implemented Practice Player with MP3 upload, speed control, and always-on strict looping.
 - Added "Trainer Mode" to Metronome for automatic tempo ramping.
