@@ -230,3 +230,91 @@ Added a "Trainer" feature to the Metronome.
     -   Resize window to narrow width.
     -   Verify Sequencer grid scales down.
     -   Verify controls stack.
+
+<a name="log-20251230-theme-practice-update"></a>
+## [2025-12-30] Industrial UI & Practice Enhancements
+
+**User Prompt:**
+> I like the industrial design. But could we have a theme selector? and make the light theme the default.
+> when we load an audio file in the practice tab, it has to remain there... click in the audio track WITHIN the loop... OUTSIDE of the loop area, the audio track should be 'greyed out'
+
+### Implementation Plan
+# Theme System Implementation
+
+## Goal
+Implement a dynamic **Theme Selector** allowing users to switch between Light and Dark modes.
+**Requirement**: "Light Mode" will be the **default**.
+**Aesthetic**: "Nice", "Industrial".
+-   **Light Mode**: Dieter Rams / Braun aesthetic. Off-white backgrounds, sharp grey borders, high-contrast black text, Orange accent.
+-   **Dark Mode**: The existing "Lab Equipment" dark industrial look.
+
+## Technical Strategy
+We will use **CSS Custom Properties (Variables)** mapped to Tailwind's `@theme`.
+
+### 1. Refactor `index.css`
+Define semantic variables in `:root` (Light) and `.dark` (Dark).
+
+```css
+:root {
+  /* LIGHT (Default) */
+  --color-bg-app: #fafafa;      /* Zinc-50 */
+  --color-bg-panel: #ffffff;    /* White */
+  --color-border: #e4e4e7;      /* Zinc-200 */
+  --color-text-base: #18181b;   /* Zinc-900 */
+  --color-text-muted: #71717a;  /* Zinc-500 */
+  --color-primary-accent: #f97316; /* Orange-500 */
+}
+
+.dark {
+  /* DARK (Industrial) */
+  --color-bg-app: #09090b;      /* Zinc-950 */
+  --color-bg-panel: #18181b;    /* Zinc-900 */
+  --color-border: #27272a;      /* Zinc-800 */
+  --color-text-base: #e4e4e7;   /* Zinc-200 */
+  --color-text-muted: #52525b;  /* Zinc-600 */
+}
+```
+
+# Practice Player Enhancements
+
+## Goal
+Improve usability of the Practice Player by adding persistence, file management, and better loop interactions.
+
+## Key Changes
+
+### 1. Persistence (Lift State)
+-   **Current**: `PracticePlayer` holds local state. Unmounting (tab switch) loses the file.
+-   **New**: `App.tsx` will hold `audioFile` (Blob | null).
+
+### 2. Remove Track
+-   Add a "REMOVE FILE" button in `PracticePlayer` that calls `onClear`.
+
+### 3. Loop Interaction (Click-to-Seek)
+-   **Problem**: Clicking a region currently triggers `region.play()` which might reset or toggle.
+-   **Fix**: Update `region-clicked` handler to seek to exact cursor position.
+
+### 4. Visuals (Focus Mode)
+-   **Requirement**: "Outside loop should be greyed out".
+-   **Strategy**: Set base `waveColor` to a darker, low-contrast shade to represent "masked/disabled".
+
+### Walkthrough
+# 808.TOOLS - Audio Engine Walkthrough
+
+**Current Version: v2.3.0 (Enhanced Practice Desk)**
+
+The application now features a persistent and robust Practice Deck with advanced looping controls.
+
+## 🎨 Theme System
+-   **Dual Theme**: Light (Braun) / Dark (Industrial).
+-   **Toggle**: Header-integrated switch.
+
+## 🛠 Modules
+### 1. Practice Deck (PRACTICE_DECK)
+-   **Persistence**: Audio track remains loaded when switching between tabs.
+-   **File Management**: Load / Remove Track.
+-   **Looping Logic**:
+    -   **Strict Lock**: Playback snaps inside the loop region.
+    -   **Click-to-Seek**: Clicking inside instantly jumps to that point.
+-   **Visuals**:
+    -   **Disabled Area**: Base waveform is muted/dimmed.
+    -   **Active Area**: Loop region is highlighted (Safety Orange tint).

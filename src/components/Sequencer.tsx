@@ -21,7 +21,7 @@ export default function Sequencer() {
   const bpmRef = useRef(bpm);
   useEffect(() => { bpmRef.current = bpm; }, [bpm]);
 
-  // Audio Logic (Same as before, skipped for brevity in thought, but included in file)
+  // Audio Logic
   const playSound = (row: number, time: number) => {
     if (!audioContext.current) return;
     const ctx = audioContext.current;
@@ -127,14 +127,14 @@ export default function Sequencer() {
   };
 
   return (
-    <div className="lab-panel w-full max-w-3xl mx-auto p-8 border border-zinc-700">
+    <div className="lab-panel w-full max-w-3xl mx-auto p-8 border border-border-base bg-surface">
       
-      <div className="flex flex-col md:flex-row justify-between items-end mb-8 border-b border-zinc-800 pb-4">
+      <div className="flex flex-col md:flex-row justify-between items-end mb-8 border-b border-border-base pb-4">
         <div>
-            <h2 className="text-sm font-mono font-bold text-white uppercase tracking-widest mb-1">
+            <h2 className="text-sm font-mono font-bold lab-text-main uppercase tracking-widest mb-1">
                 SEQUENCER_MODEL_808
             </h2>
-            <div className="text-[10px] text-zinc-500 font-mono">
+            <div className="text-[10px] lab-text-muted font-mono">
                 POLYPHONIC_STEP_GENERATOR
             </div>
         </div>
@@ -146,7 +146,7 @@ export default function Sequencer() {
                     type="number" 
                     value={bpm} 
                     onChange={(e) => setBpm(Number(e.target.value))} 
-                    className="bg-transparent text-xl font-mono text-white text-right w-16 focus:outline-none border-b border-zinc-700 focus:border-primary"
+                    className="bg-transparent text-xl font-mono lab-text-main text-right w-16 focus:outline-none border-b border-border-base focus:border-primary"
                 />
             </div>
 
@@ -155,8 +155,8 @@ export default function Sequencer() {
                 className={`
                     w-24 h-24 flex items-center justify-center font-bold tracking-widest border transition-all text-sm
                     ${isPlaying 
-                        ? 'bg-primary text-black border-primary' 
-                        : 'bg-zinc-900 text-zinc-400 border-zinc-700 hover:border-zinc-500 hover:text-white'}
+                        ? 'bg-primary text-white border-primary' 
+                        : 'bg-surface text-muted border-border-base hover:border-muted hover:text-main'}
                 `}
             >
                 {isPlaying ? 'STOP' : 'RUN'}
@@ -164,18 +164,18 @@ export default function Sequencer() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-px bg-zinc-800 border border-zinc-800">
+      <div className="flex flex-col gap-px bg-border-base border border-border-base">
         {ROWS.map((name, rowIdx) => (
-            <div key={name} className="flex bg-zinc-950">
+            <div key={name} className="flex bg-[var(--color-bg-app)]">
                 {/* Instrument Label */}
-                <div className="w-24 flex items-center px-4 border-r border-zinc-800">
-                    <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-tighter">
+                <div className="w-24 flex items-center px-4 border-r border-border-base bg-surface">
+                    <span className="text-[10px] font-mono font-bold lab-text-muted uppercase tracking-tighter">
                         {name}
                     </span>
                 </div>
                 
                 {/* Steps */}
-                <div className="flex-1 grid grid-cols-8 gap-px bg-zinc-800">
+                <div className="flex-1 grid grid-cols-8 gap-px bg-border-base">
                     {Array(STEPS).fill(0).map((_, stepIdx) => {
                         const isActive = grid[rowIdx][stepIdx];
                         const isCurrent = currentStep === stepIdx && isPlaying;
@@ -188,14 +188,14 @@ export default function Sequencer() {
                                     h-16 w-full transition-colors duration-0 focus:outline-none relative
                                     ${isActive 
                                         ? 'bg-primary' 
-                                        : 'bg-zinc-900 hover:bg-zinc-800'}
+                                        : 'bg-surface hover:bg-[var(--color-bg-app)]'}
                                 `}
                             >
                                 {isCurrent && (
-                                    <div className={`absolute bottom-0 left-0 right-0 h-1 bg-white`}></div>
+                                    <div className={`absolute bottom-0 left-0 right-0 h-1 bg-[var(--color-text-main)]`}></div>
                                 )}
                                 {isActive && (
-                                     <div className="w-2 h-2 bg-black opacity-20 mx-auto rounded-full"></div>
+                                     <div className="w-2 h-2 bg-white opacity-40 mx-auto rounded-full"></div>
                                 )}
                             </button>
                         );
@@ -210,7 +210,7 @@ export default function Sequencer() {
          <div className="flex-1 grid grid-cols-8 gap-px">
             {Array(STEPS).fill(0).map((_, i) => (
                 <div key={i} className="text-center">
-                    <span className="text-[10px] font-mono text-zinc-700">{i + 1}</span>
+                    <span className="text-[10px] font-mono lab-text-muted">{i + 1}</span>
                 </div>
             ))}
          </div>

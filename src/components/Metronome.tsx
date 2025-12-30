@@ -23,7 +23,7 @@ export default function Metronome() {
   const bpmRef = useRef(bpm);
   useEffect(() => { bpmRef.current = bpm; }, [bpm]);
 
-  // Practice Mode Logic (Same as before)
+  // Practice Mode Logic
   useEffect(() => {
     let interval: number;
     if (isPlaying && practiceMode) {
@@ -46,7 +46,7 @@ export default function Metronome() {
     return () => clearInterval(interval);
   }, [isPlaying, practiceMode, startBpm, targetBpm, duration]);
 
-  // Audio Logic (Same as before)
+  // Audio Logic
   useEffect(() => {
     return () => {
       if (timerID.current) window.clearTimeout(timerID.current);
@@ -128,15 +128,15 @@ export default function Metronome() {
     <div className="lab-panel w-full max-w-lg mx-auto p-12 relative text-left">
       <div className="mb-2">
         <label className="lab-label">CLK_SOURCE</label>
-        <span className="text-sm font-bold text-zinc-400">INTERNAL_OSC</span>
+        <span className="text-sm font-bold lab-text-muted">INTERNAL_OSC</span>
       </div>
       
-      <div className="flex items-end justify-between mb-8 border-b border-zinc-800 pb-8">
+      <div className="flex items-end justify-between mb-8 border-b border-border-base pb-8">
         <div>
-            <div className="text-8xl font-mono font-bold text-zinc-100 tabular-nums leading-none tracking-tighter">
+            <div className="text-8xl font-mono font-bold lab-text-main tabular-nums leading-none tracking-tighter">
                 {bpm}
             </div>
-            <div className="text-xs font-mono text-zinc-500 uppercase mt-1 tracking-widest">
+            <div className="text-xs font-mono lab-text-muted uppercase mt-1 tracking-widest">
                 Beats Per Minute
             </div>
         </div>
@@ -144,13 +144,13 @@ export default function Metronome() {
         {/* Visual Indicator - Plain Square */}
         <div className="mb-2">
              <div 
-                className={`w-4 h-4 transition-colors duration-0
+                className={`w-4 h-4 transition-colors duration-0 border border-border-base
                     ${isPlaying && beat !== null 
-                        ? (beat === 0 ? 'bg-red-500' : 'bg-primary') 
-                        : 'bg-zinc-800'}
+                        ? (beat === 0 ? 'bg-primary border-primary' : 'bg-primary/50 border-primary') 
+                        : 'bg-surface'}
                 `}
             ></div>
-            <div className="text-[10px] text-zinc-600 mt-2 font-mono uppercase tracking-wider text-center">
+            <div className="text-[10px] lab-text-muted mt-2 font-mono uppercase tracking-wider text-center">
                 SIGNAL
             </div>
         </div>
@@ -163,9 +163,9 @@ export default function Metronome() {
             max="240" 
             value={bpm} 
             onChange={handleBpmChange}
-            className="w-full h-1 bg-zinc-800 appearance-none cursor-pointer accent-white hover:accent-primary"
+            className="w-full h-1 bg-border-base appearance-none cursor-pointer accent-[var(--color-text-main)] hover:accent-primary"
         />
-        <div className="flex justify-between text-[10px] font-mono text-zinc-600 mt-2">
+        <div className="flex justify-between text-[10px] font-mono lab-text-muted mt-2">
             <span>40</span>
             <span>240</span>
         </div>
@@ -175,15 +175,15 @@ export default function Metronome() {
         onClick={togglePlay}
         className={`w-full py-4 text-sm font-bold font-mono tracking-widest uppercase border transition-colors
             ${isPlaying 
-                ? 'bg-zinc-100 text-black border-zinc-100 hover:bg-white' 
-                : 'bg-transparent text-primary border-primary hover:bg-primary hover:text-black'}
+                ? 'bg-[var(--color-text-main)] text-[var(--color-bg-panel)] border-[var(--color-text-main)] hover:bg-transparent hover:text-[var(--color-text-main)]' 
+                : 'bg-transparent text-primary border-primary hover:bg-primary hover:text-white'}
         `}
       >
         {isPlaying ? 'Stop Playback' : 'Start Playback'}
       </button>
 
       {/* Practice Mode Controls */}
-      <div className="mt-12 pt-8 border-t border-zinc-800">
+      <div className="mt-12 pt-8 border-t border-border-base">
         <div className="flex items-center justify-between mb-6">
             <h3 className="lab-label mb-0">TEMPO_TRAINER</h3>
             <button 
@@ -224,11 +224,11 @@ export default function Metronome() {
                     />
                 </div>
                  <div className="col-span-2 mt-2">
-                    <div className="flex justify-between text-[10px] font-mono text-zinc-500 uppercase mb-1">
+                    <div className="flex justify-between text-[10px] font-mono lab-text-muted uppercase mb-1">
                         <span>Progress</span>
                         <span>{Math.round((elapsedTime / duration) * 100)}%</span>
                     </div>
-                    <div className="w-full h-1 bg-zinc-800">
+                    <div className="w-full h-1 bg-border-base">
                         <div 
                             className="h-full bg-primary"
                             style={{ width: `${Math.min(100, (elapsedTime / duration) * 100)}%` }}

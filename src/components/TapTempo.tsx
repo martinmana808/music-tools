@@ -32,12 +32,12 @@ export default function TapTempo() {
   return (
     <div className="lab-panel w-full max-w-sm mx-auto p-0 relative">
        
-      <div className="p-12 text-center border-b border-zinc-800">
+      <div className="p-12 text-center border-b border-border-base">
           <label className="lab-label block mb-4">DETECTED_TEMPO</label>
-          <div className="text-8xl font-black font-mono text-zinc-100 tabular-nums leading-none tracking-tighter">
+          <div className="text-8xl font-black font-mono lab-text-main tabular-nums leading-none tracking-tighter">
             {bpm || '--'}
           </div>
-          <div className="text-xs font-mono text-zinc-600 uppercase mt-2 tracking-widest">
+          <div className="text-xs font-mono lab-text-muted uppercase mt-2 tracking-widest">
             BPM / AVG_8_TAPS
           </div>
       </div>
@@ -45,14 +45,14 @@ export default function TapTempo() {
       <button 
           onMouseDown={handleTap}
           onTouchStart={(e) => { e.preventDefault(); handleTap(); }} 
-          className="w-full h-48 bg-zinc-900 hover:bg-zinc-800 active:bg-primary active:text-black text-zinc-500 font-bold text-xl tracking-[0.3em] uppercase transition-colors"
+          className="w-full h-48 bg-surface hover:bg-[var(--color-bg-app)] active:bg-primary active:text-white lab-text-muted font-bold text-xl tracking-[0.3em] uppercase transition-colors"
         >
           TAP_INPUT
       </button>
         
       <button 
             onClick={handleReset} 
-             className="w-full py-3 text-[10px] font-mono text-zinc-600 hover:text-zinc-300 hover:bg-zinc-900 border-t border-zinc-800 uppercase tracking-widest transition-colors"
+             className="w-full py-3 text-[10px] font-mono lab-text-muted hover:text-[var(--color-text-main)] hover:bg-surface border-t border-border-base uppercase tracking-widest transition-colors"
         >
           RESET_COUNTER
       </button>

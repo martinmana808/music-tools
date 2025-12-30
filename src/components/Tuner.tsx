@@ -19,7 +19,7 @@ export default function Tuner() {
   const micStream = useRef<MediaStream | null>(null);
   const rafId = useRef<number | null>(null);
 
-  // AutoCorrelate (Reuse existing logic)
+  // AutoCorrelate
   const autoCorrelate = (buf: Float32Array, sampleRate: number) => {
     let size = buf.length;
     let rms = 0;
@@ -112,29 +112,29 @@ export default function Tuner() {
     <div className="lab-panel w-full max-w-lg mx-auto p-12 text-center">
       
       <div className="mb-8">
-          <h2 className="text-xs font-mono font-bold text-zinc-500 uppercase tracking-widest mb-4">
+          <h2 className="text-xs font-mono font-bold lab-text-muted uppercase tracking-widest mb-4">
             INPUT_ANALYSIS
           </h2>
           
-          <div className="text-9xl font-black text-white leading-none tracking-tighter mb-4">
+          <div className="text-9xl font-black lab-text-main leading-none tracking-tighter mb-4">
              {note}
           </div>
 
-          <div className="h-8 bg-zinc-900 border border-zinc-800 relative w-full mb-2">
+          <div className="h-8 bg-surface border border-border-base relative w-full mb-2">
                {/* Center Marker */}
-               <div className="absolute left-1/2 top-0 bottom-0 w-px bg-zinc-600"></div>
+               <div className="absolute left-1/2 top-0 bottom-0 w-px bg-border-base"></div>
                
                {/* Needle Block */}
                {isListening && (
                    <div 
                         className={`absolute top-0 bottom-0 w-1 transition-all duration-100
-                            ${Math.abs(cents) < 5 ? 'bg-primary' : 'bg-zinc-400'}
+                            ${Math.abs(cents) < 5 ? 'bg-primary' : 'bg-lab-text-muted'}
                         `}
                         style={{ left: `${getMeterPosition()}%` }}
                    ></div>
                )}
           </div>
-          <div className="flex justify-between text-[10px] font-mono text-zinc-600 uppercase">
+          <div className="flex justify-between text-[10px] font-mono lab-text-muted uppercase">
               <span>FLAT (-50)</span>
               <span>{isListening ? (cents > 0 ? `+${cents}` : cents) : 'OFF'}</span>
               <span>SHARP (+50)</span>
@@ -145,23 +145,23 @@ export default function Tuner() {
         onClick={isListening ? stopListening : startListening}
         className={`w-full py-4 text-sm font-bold font-mono tracking-widest uppercase border transition-colors mb-12
             ${isListening 
-                ? 'bg-zinc-100 text-black border-zinc-100 hover:bg-white' 
-                : 'bg-transparent text-primary border-primary hover:bg-primary hover:text-black'}
+                ? 'bg-[var(--color-text-main)] text-[var(--color-bg-panel)] border-[var(--color-text-main)] hover:bg-transparent hover:text-[var(--color-text-main)]' 
+                : 'bg-transparent text-primary border-primary hover:bg-primary hover:text-white'}
         `}
       >
         {isListening ? 'DEACTIVATE MIC' : 'ACTIVATE MIC'}
       </button>
 
-      <div className="pt-8 border-t border-zinc-800">
+      <div className="pt-8 border-t border-border-base">
         <label className="lab-label mb-4">REFERENCE_TONES_HZ</label>
         <div className="grid grid-cols-3 gap-2">
           {GUITAR_STRINGS.map((s) => (
             <button
               key={s.note}
               onClick={() => playTone(s.freq)}
-              className="lab-button border-zinc-800 hover:border-zinc-500 hover:text-white text-zinc-400"
+              className="lab-button"
             >
-              {s.note} <span className="text-[10px] text-zinc-600 block">{s.freq}</span>
+              {s.note} <span className="text-[10px] opacity-70 block">{s.freq}</span>
             </button>
           ))}
         </div>
