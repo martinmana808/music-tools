@@ -14,12 +14,16 @@ export default function Tuner() {
   const [note, setNote] = useState<string>('--');
   const [cents, setCents] = useState<number>(0);
   const [isListening, setIsListening] = useState(false);
+  const [activeTone, setActiveTone] = useState<string | null>(null);
+
   const audioContext = useRef<AudioContext | null>(null);
   const analyser = useRef<AnalyserNode | null>(null);
   const micStream = useRef<MediaStream | null>(null);
   const rafId = useRef<number | null>(null);
+  const toneOscillator = useRef<OscillatorNode | null>(null);
+  const toneGain = useRef<GainNode | null>(null);
 
-  // AutoCorrelate
+  // --- AutoCorrelate / Pitch Detection ---
   const autoCorrelate = (buf: Float32Array, sampleRate: number) => {
     let size = buf.length;
     let rms = 0;
@@ -77,67 +81,161 @@ export default function Tuner() {
   const stopListening = () => {
     if (micStream.current) micStream.current.getTracks().forEach(track => track.stop());
     if (rafId.current) cancelAnimationFrame(rafId.current);
-    if (audioContext.current) audioContext.current.close();
-    audioContext.current = null;
+    // Don't close context if tone is playing? Actually fine to keep context, just stop inputs.
+    // For now, let's keep consistent:
     setIsListening(false);
     setNote('--');
     setCents(0);
   };
 
-  const playTone = (freq: number) => {
-    if (!audioContext.current) audioContext.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-    if (audioContext.current.state === 'suspended') audioContext.current.resume();
-    const osc = audioContext.current.createOscillator();
-    const gain = audioContext.current.createGain();
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(freq, audioContext.current.currentTime);
-    gain.gain.setValueAtTime(0.5, audioContext.current.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioContext.current.currentTime + 2);
-    osc.connect(gain);
-    gain.connect(audioContext.current.destination);
-    osc.start();
-    osc.stop(audioContext.current.currentTime + 2);
+  // --- Reference Tones (Continuous) ---
+  const toggleTone = (noteName: string, freq: number) => {
+      // Init Context if needed
+      if (!audioContext.current) audioContext.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      if (audioContext.current.state === 'suspended') audioContext.current.resume();
+
+      // If clicking same button -> Stop
+      if (activeTone === noteName) {
+          stopTone();
+          return;
+      }
+
+      // If another is playing -> Stop it first
+      if (toneOscillator.current) {
+          try { toneOscillator.current.stop(); } catch(e){}
+          toneOscillator.current.disconnect();
+      }
+
+      // Start New Tone
+      const osc = audioContext.current.createOscillator();
+      const gain = audioContext.current.createGain();
+      
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, audioContext.current.currentTime);
+      
+      // Sustain Gain
+      gain.gain.setValueAtTime(0, audioContext.current.currentTime);
+      gain.gain.linearRampToValueAtTime(0.3, audioContext.current.currentTime + 0.1); 
+
+      osc.connect(gain);
+      gain.connect(audioContext.current.destination);
+      osc.start();
+
+      toneOscillator.current = osc;
+      toneGain.current = gain;
+      setActiveTone(noteName);
   };
 
-  useEffect(() => { return () => stopListening(); }, []);
-
-  // Visuals for flat meter
-  const getMeterPosition = () => {
-      // Map -50 to +50 cents to 0% to 100% width
-      const clamped = Math.max(-50, Math.min(50, cents));
-      return 50 + clamped; // 0 to 100
+  const stopTone = () => {
+      if (toneGain.current && audioContext.current) {
+          // Fade out
+          toneGain.current.gain.setValueAtTime(toneGain.current.gain.value, audioContext.current.currentTime);
+          toneGain.current.gain.exponentialRampToValueAtTime(0.001, audioContext.current.currentTime + 0.1);
+          
+          if (toneOscillator.current) {
+               toneOscillator.current.stop(audioContext.current.currentTime + 0.15);
+          }
+      }
+      setActiveTone(null);
   };
+
+  useEffect(() => { 
+      return () => {
+          stopListening();
+          stopTone();
+      }; 
+  }, []);
 
   return (
     <div className="lab-panel w-full max-w-lg mx-auto p-12 text-center">
       
-      <div className="mb-8">
+      <div className="mb-12">
           <h2 className="text-xs font-mono font-bold lab-text-muted uppercase tracking-widest mb-4">
             INPUT_ANALYSIS
           </h2>
           
-          <div className="text-9xl font-black lab-text-main leading-none tracking-tighter mb-4">
+          <div className="text-9xl font-black lab-text-main leading-none tracking-tighter mb-8">
              {note}
           </div>
 
-          <div className="h-8 bg-surface border border-border-base relative w-full mb-2">
-               {/* Center Marker */}
-               <div className="absolute left-1/2 top-0 bottom-0 w-px bg-border-base"></div>
+          {/* --- Classic Gauge Visual --- */}
+          <div className="relative w-full aspect-[2/1] max-w-[300px] mx-auto mb-8">
                
-               {/* Needle Block */}
-               {isListening && (
-                   <div 
-                        className={`absolute top-0 bottom-0 w-1 transition-all duration-100
-                            ${Math.abs(cents) < 5 ? 'bg-primary' : 'bg-lab-text-muted'}
-                        `}
-                        style={{ left: `${getMeterPosition()}%` }}
-                   ></div>
-               )}
+               {/* Gauge Background (SVG) */}
+               <svg className="w-full h-full overflow-visible" viewBox="0 0 200 100">
+                    {/* Tick Marks */}
+                    {Array.from({ length: 11 }).map((_, i) => {
+                        // Range -50 to +50 cents
+                        // Map 0 -> 100 (range)
+                        // Angle: Let's use 180 degree semi-circle for simplicity.
+                        // -90deg (Left) to +90deg (Right).
+                        // i=0 (-50c) -> -90deg
+                        // i=5 (0c)   -> 0deg
+                        // i=10 (+50c)-> +90deg
+                        const val = (i - 5) * 10;
+                        const angle = (i * 18) - 90; // 0..10 -> 0..180 -> -90..90
+                        
+                        // Convert polar to cartesian
+                        // Center is (100, 100) (Bottom center of 200x100 box)
+                        const rad = (angle - 90) * (Math.PI / 180); // SVG coordinates: 0 is Right. -90 is Top.
+                        // We want 0deg to be Up (Top). -90 Left. +90 Right.
+                        // In SVG std: 0 is East. -90 is North. 180 is West.
+                        // Our '0' (Up) corresponds to -90 SVG.
+                        // Our '-90' (Left) corresponds to -180 SVG.
+                        // Our '+90' (Right) corresponds to 0 SVG.
+                        // Formula: svgAngle = userAngle - 90.
+                        
+                        const innerR = 70;
+                        const outerR = val === 0 ? 95 : 85; 
+                        
+                        const x1 = 100 + innerR * Math.cos(rad);
+                        const y1 = 100 + innerR * Math.sin(rad);
+                        const x2 = 100 + outerR * Math.cos(rad);
+                        const y2 = 100 + outerR * Math.sin(rad);
+
+                        return (
+                            <g key={val}>
+                                <line x1={x1} y1={y1} x2={x2} y2={y2} 
+                                      className={`stroke-current ${val === 0 ? 'text-primary stroke-[3]' : 'text-border stroke-[1]'}`} />
+                                { val % 20 === 0 && (
+                                    <text x={100 + (outerR + 15) * Math.cos(rad)} 
+                                          y={100 + (outerR + 15) * Math.sin(rad)}
+                                          className={`text-[8px] font-mono fill-[var(--color-text-muted)] text-center`}
+                                          textAnchor="middle"
+                                          dominantBaseline="middle"
+                                          transform={`rotate(${angle}, ${100 + (outerR + 15) * Math.cos(rad)}, ${100 + (outerR + 15) * Math.sin(rad)})`}
+                                    >
+                                        {val > 0 ? `+${val}` : val}
+                                    </text>
+                                )}
+                            </g>
+                        );
+                    })}
+               </svg>
+
+               {/* Needle */}
+               <div 
+                    className="absolute bottom-0 left-1/2 w-1 h-[90%] bg-primary origin-bottom -translate-x-1/2 z-10 transition-transform duration-200 ease-out will-change-transform rounded-full shadow-[0_0_10px_var(--color-primary)]"
+                    style={{
+                        transform: `translateX(-50%) rotate(${Math.max(-90, Math.min(90, cents * 1.8))}deg)` 
+                        // cents: -50..50.
+                        // deg: -90..90
+                        // factor: 1.8
+                    }}
+               ></div>
+
+               {/* Pivot Point */}
+               <div className="absolute bottom-0 left-1/2 w-4 h-4 bg-primary rounded-full -translate-x-1/2 translate-y-1/2 z-20 shadow-md"></div>
+               
+               {/* Digital Readout overlay if needed, or keep it above */}
           </div>
-          <div className="flex justify-between text-[10px] font-mono lab-text-muted uppercase">
-              <span>FLAT (-50)</span>
-              <span>{isListening ? (cents > 0 ? `+${cents}` : cents) : 'OFF'}</span>
-              <span>SHARP (+50)</span>
+
+          <div className="flex justify-between text-[10px] font-mono lab-text-muted uppercase px-1">
+              <span>FLAT</span>
+              <span className={Math.abs(cents) < 5 ? 'text-primary font-bold' : ''}>
+                  {isListening ? (cents > 0 ? `+${cents}` : cents) : 'OFF'}
+              </span>
+              <span>SHARP</span>
           </div>
       </div>
 
@@ -153,17 +251,26 @@ export default function Tuner() {
       </button>
 
       <div className="pt-8 border-t border-border-base">
-        <label className="lab-label mb-4">REFERENCE_TONES_HZ</label>
+        <label className="lab-label mb-4">REFERENCE_TONES_HZ (TOGGLE)</label>
         <div className="grid grid-cols-3 gap-2">
-          {GUITAR_STRINGS.map((s) => (
-            <button
-              key={s.note}
-              onClick={() => playTone(s.freq)}
-              className="lab-button"
-            >
-              {s.note} <span className="text-[10px] opacity-70 block">{s.freq}</span>
-            </button>
-          ))}
+          {GUITAR_STRINGS.map((s) => {
+            const isActive = activeTone === s.note;
+            return (
+                <button
+                key={s.note}
+                onClick={() => toggleTone(s.note, s.freq)}
+                className={`
+                    lab-button flex flex-col items-center justify-center py-4 border transition-all
+                    ${isActive 
+                        ? 'bg-primary border-primary text-white shadow-[0_0_15px_rgba(249,115,22,0.4)]' 
+                        : 'hover:border-primary hover:text-primary'}
+                `}
+                >
+                <div className="font-bold text-lg leading-none">{s.note}</div>
+                <div className={`text-[10px] mt-1 ${isActive ? 'opacity-100' : 'opacity-60'}`}>{s.freq}</div>
+                </button>
+            );
+          })}
         </div>
       </div>
 

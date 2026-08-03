@@ -16,6 +16,10 @@
 - Implemented **Light/Dark Theme System** with semantic variables.
 - Enhanced Practice Player with persistence, seeking, and active visuals.
 
+### [2025-12-30] Classic Gauge Tuner | [Technical Details](./GEMINI--logs.md#log-20251230-tuner-gauge-refresh)
+- Replaced linear sliding ruler with **Classic Analog Gauge** (SVG).
+- Implemented smooth needle animation and industrial styling.
+
 ### [2025-12-29] Practice Player & Metronome Trainer | [Technical Details](./GEMINI--logs.md#log-20251229-practice-player-metronome)
 - Implemented Practice Player with MP3 upload, speed control, and always-on strict looping.
 - Added "Trainer Mode" to Metronome for automatic tempo ramping.

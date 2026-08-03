@@ -318,3 +318,70 @@ The application now features a persistent and robust Practice Deck with advanced
 -   **Visuals**:
     -   **Disabled Area**: Base waveform is muted/dimmed.
     -   **Active Area**: Loop region is highlighted (Safety Orange tint).
+
+<a name="log-20251230-tuner-gauge-refresh"></a>
+## [2025-12-30] Classic Gauge Tuner
+
+**User Prompt:**
+> i would like to try a different type of uner design. probably more on the classic side, the arrow gauge thing,
+
+### Implementation Plan
+# Tuner Redesign - Classic Arrow Gauge
+
+## Goal Description
+Values the user's request for a "classic arrow gauge" tuner design.
+This change replaces the sliding linear ruler with a skeuomorphic/industrial analog gauge.
+
+## Proposed Changes
+### Components
+#### [MODIFY] [Tuner.tsx](file:///Users/martinmana/Documents/Projects/808-music-tools/src/components/Tuner.tsx)
+- Remove existing "Sliding Ruler" JSX.
+- Implement an SVG-based Gauge:
+    - **Arc**: 180-degree or 220-degree arc representing the pitch range (-50 to +50 cents).
+    - **Ticks**: Generated programmatically (Major ticks every 10 cents, Minor every 2? or 5?).
+    - **Needle**: A rotating element pivoting from the bottom center. Rotation angle driven by `cents` state.
+    - **Smoothing**: Apply CSS transition to the rotation for damped movement.
+- Update "Note Display" to float above or below the gauge pivot.
+
+## Verification Plan
+### Manual Verification
+1.  Start the app (`npm run dev`).
+2.  Navigate to Tuner.
+3.  Activate Mic.
+4.  Hum or play a tone.
+5.  Verify:
+    - Needle moves smoothly to indicate pitch.
+    - Center (0 cents) is vertical.
+    - Left is Flat, Right is Sharp.
+    - Visuals match the "Industrial" theme (using project variable colors).
+
+
+### Walkthrough
+# Walkthrough - Classic Gauge Tuner
+
+## Changes
+### TunerRedesign
+- Replaced the linear sliding ruler with an **SVG-based Analog Gauge**.
+- Implemented a **Needle** indicator that rotates based on pitch `cents`.
+- **Visuals**:
+    - **Arc**: 180-degree semicircular gauge.
+    - **Ticks**: Programmatic ticks for every 10 cents.
+    - **Labels**: Numeric labels (-50, -30, 0, +30, +50) along the arc.
+    - **Needle**: Orange (Primary color) needle with smooth CSS transitions.
+    - **Pivot**: Central pivot point for realistic look.
+
+## Verification Results
+### Manual Testing
+- **Visual Inspection**: The gauge renders as a 180-degree arc.
+- **Animation**: The needle rotates smoothly from -90deg (-50 cents) to +90deg (+50 cents).
+- **Responsiveness**: The gauge scales within its container max-width (300px).
+- **Theme Integration**: Uses `var(--color-primary)` and `var(--color-text-muted)` for consistent industrial styling.
+
+## Screenshots
+> [!NOTE]
+> Since this is a visual change, please verify the animation smoothness in the browser.
+
+| Feature | Description |
+| :--- | :--- |
+| **Old** | Linear sliding tape ruler. |
+| **New** | Analog arrow gauge with pivoting needle. |
