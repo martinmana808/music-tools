@@ -1,40 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useTapTempo } from '../lib/useTapTempo';
 
-export default function TapTempo() {
-  const [bpm, setBpm] = useState<number | null>(null);
-  const [taps, setTaps] = useState<number[]>([]);
+interface TapTempoProps {
+  /** Fired whenever a new tempo is detected, so a host can sync to it. */
+  onBpmDetected?: (bpm: number) => void;
+  /** Drop the standalone panel chrome when rendered inside another panel. */
+  embedded?: boolean;
+}
 
-  useEffect(() => {
-    if (taps.length > 1) {
-      const intervals = [];
-      for (let i = 1; i < taps.length; i++) intervals.push(taps[i] - taps[i - 1]);
-      const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
-      setBpm(Math.round(60000 / avgInterval));
-    }
-  }, [taps]);
-
-  const handleTap = () => {
-    const now = Date.now();
-    if (taps.length > 0 && now - taps[taps.length - 1] > 2000) {
-      setTaps([now]);
-      setBpm(null);
-      return;
-    }
-    const newTaps = [...taps, now].slice(-8);
-    setTaps(newTaps);
-  };
-
-  const handleReset = () => {
-    setTaps([]);
-    setBpm(null);
-  };
+export default function TapTempo({ onBpmDetected, embedded = false }: TapTempoProps = {}) {
+  const { bpm, tap: handleTap, reset: handleReset } = useTapTempo({ onBpmDetected });
 
   return (
-    <div className="lab-panel w-full max-w-sm mx-auto p-0 relative">
-       
-      <div className="p-12 text-center border-b border-border-base">
+    <div className={embedded ? 'w-full border border-border-base' : 'lab-panel w-full max-w-sm mx-auto p-0 relative'}>
+
+      <div className={`text-center border-b border-border-base ${embedded ? 'p-6' : 'p-12'}`}>
           <label className="lab-label block mb-4">DETECTED_TEMPO</label>
-          <div className="text-8xl font-black font-mono lab-text-main tabular-nums leading-none tracking-tighter">
+          <div className={`font-black font-mono lab-text-main tabular-nums leading-none tracking-tighter ${embedded ? 'text-5xl' : 'text-8xl'}`}>
             {bpm || '--'}
           </div>
           <div className="text-xs font-mono lab-text-muted uppercase mt-2 tracking-widest">
@@ -42,10 +23,10 @@ export default function TapTempo() {
           </div>
       </div>
 
-      <button 
+      <button
           onMouseDown={handleTap}
-          onTouchStart={(e) => { e.preventDefault(); handleTap(); }} 
-          className="w-full h-48 bg-surface hover:bg-[var(--color-bg-app)] active:bg-primary active:text-white lab-text-muted font-bold text-xl tracking-[0.3em] uppercase transition-colors"
+          onTouchStart={(e) => { e.preventDefault(); handleTap(); }}
+          className={`w-full bg-surface hover:bg-[var(--color-bg-app)] active:bg-primary active:text-white lab-text-muted font-bold text-xl tracking-[0.3em] uppercase transition-colors ${embedded ? 'h-28' : 'h-48'}`}
         >
           TAP_INPUT
       </button>

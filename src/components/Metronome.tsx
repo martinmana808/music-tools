@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import TapTempo from './TapTempo';
 
 export default function Metronome() {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -124,6 +125,13 @@ export default function Metronome() {
       setElapsedTime(0);
   }
 
+  // Tapping a tempo drives the metronome directly; it also overrides a ramp
+  // in progress, same as dragging the BPM slider does.
+  const handleTappedBpm = (tapped: number) => {
+      setBpm(tapped);
+      if (practiceMode) setPracticeMode(false);
+  };
+
   return (
     <div className="lab-panel w-full max-w-lg mx-auto p-12 relative text-left">
       <div className="mb-2">
@@ -181,6 +189,12 @@ export default function Metronome() {
       >
         {isPlaying ? 'Stop Playback' : 'Start Playback'}
       </button>
+
+      {/* Tap Tempo */}
+      <div className="mt-12 pt-8 border-t border-border-base">
+        <h3 className="lab-label mb-4">TAP_TEMPO</h3>
+        <TapTempo embedded onBpmDetected={handleTappedBpm} />
+      </div>
 
       {/* Practice Mode Controls */}
       <div className="mt-12 pt-8 border-t border-border-base">

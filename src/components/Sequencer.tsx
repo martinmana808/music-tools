@@ -1,18 +1,33 @@
 import { useState, useEffect, useRef } from 'react';
+import { loadDrumKit, triggerSample, type DrumKit, type DrumVoice, type KitStatus } from '../lib/drumKit';
+import { PRESETS, STEPS, emptyGrid, cloneGrid } from '../lib/presets';
+import { useTapTempo, MIN_BPM, MAX_BPM } from '../lib/useTapTempo';
 
 const ROWS = ['HI_HAT', 'SNARE_DRUM', 'KICK_DRUM'];
-const STEPS = 8;
+/** Row index -> sample voice. Must stay aligned with ROWS. */
+const ROW_VOICES: DrumVoice[] = ['hihat', 'snare', 'kick'];
 const INITIAL_BPM = 120;
+const SCHEDULE_AHEAD_TIME = 0.1;
+
+const KIT_LABEL: Record<KitStatus, string> = {
+  idle: 'STANDBY',
+  loading: 'LOADING...',
+  sampled: 'SAMPLED_808',
+  fallback: 'SYNTH_FALLBACK',
+};
 
 export default function Sequencer() {
-  const [grid, setGrid] = useState<boolean[][]>(
-    Array(3).fill(null).map(() => Array(STEPS).fill(false))
-  );
+  const [grid, setGrid] = useState<boolean[][]>(emptyGrid);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [bpm, setBpm] = useState(INITIAL_BPM);
+  const [activePreset, setActivePreset] = useState<string | null>(null);
+  const [kitStatus, setKitStatus] = useState<KitStatus>('idle');
 
   const audioContext = useRef<AudioContext | null>(null);
+  const kitRef = useRef<DrumKit>({});
+
+  const { tap: tapTempo, tapCount } = useTapTempo({ onBpmDetected: setBpm });
   const nextNoteTime = useRef(0);
   const stepRef = useRef(0);
   const timerID = useRef<number | null>(null);
@@ -21,10 +36,11 @@ export default function Sequencer() {
   const bpmRef = useRef(bpm);
   useEffect(() => { bpmRef.current = bpm; }, [bpm]);
 
-  // Audio Logic
+  // Audio Logic — real samples where available, synthesis as a safety net
   const playSound = (row: number, time: number) => {
     if (!audioContext.current) return;
     const ctx = audioContext.current;
+    if (triggerSample(ctx, kitRef.current, ROW_VOICES[row], time)) return;
     if (row === 2) {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -99,7 +115,7 @@ export default function Sequencer() {
 
   const scheduler = () => {
     if (!audioContext.current) return;
-    while (nextNoteTime.current < audioContext.current.currentTime + scheduleAheadTime) {
+    while (nextNoteTime.current < audioContext.current.currentTime + SCHEDULE_AHEAD_TIME) {
       scheduleStep(stepRef.current, nextNoteTime.current);
       nextStep();
     }
@@ -114,6 +130,18 @@ export default function Sequencer() {
     }
     if (!audioContext.current) audioContext.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     if (audioContext.current.state === 'suspended') audioContext.current.resume();
+
+    // First run: decode the kit. Playback starts immediately on synthesis and
+    // upgrades to samples the moment they land.
+    if (kitStatus === 'idle') {
+      setKitStatus('loading');
+      const ctx = audioContext.current;
+      loadDrumKit(ctx).then((kit) => {
+        kitRef.current = kit;
+        setKitStatus(Object.keys(kit).length === ROW_VOICES.length ? 'sampled' : 'fallback');
+      });
+    }
+
     setIsPlaying(true);
     stepRef.current = 0;
     nextNoteTime.current = audioContext.current.currentTime + 0.05;
@@ -121,9 +149,20 @@ export default function Sequencer() {
   };
 
   const toggleStep = (row: number, col: number) => {
-    const newGrid = [...grid];
-    newGrid[row][col] = !newGrid[row][col];
-    setGrid(newGrid);
+    setGrid((prev) =>
+      prev.map((steps, r) => (r === row ? steps.map((on, c) => (c === col ? !on : on)) : steps))
+    );
+    setActivePreset(null);
+  };
+
+  const loadPreset = (name: string, patternGrid: boolean[][]) => {
+    setGrid(cloneGrid(patternGrid));
+    setActivePreset(name);
+  };
+
+  const clearGrid = () => {
+    setGrid(emptyGrid());
+    setActivePreset(null);
   };
 
   return (
@@ -139,18 +178,35 @@ export default function Sequencer() {
             </div>
         </div>
 
-        <div className="flex items-center gap-6 mt-4 md:mt-0">
-            <div className="text-right">
-                <label className="lab-label block">TEMPO</label>
-                <input 
-                    type="number" 
-                    value={bpm} 
-                    onChange={(e) => setBpm(Number(e.target.value))} 
-                    className="bg-transparent text-xl font-mono lab-text-main text-right w-16 focus:outline-none border-b border-border-base focus:border-primary"
+        <div className="flex items-end gap-6 mt-4 md:mt-0 w-full md:w-auto">
+            <div className="flex-1 md:w-56">
+                <label className="lab-label flex justify-between items-baseline">
+                    <span>TEMPO</span>
+                    <span className="text-primary font-bold text-base tabular-nums">{bpm}</span>
+                </label>
+
+                <input
+                    type="range"
+                    min={MIN_BPM}
+                    max={MAX_BPM}
+                    value={bpm}
+                    onChange={(e) => setBpm(Number(e.target.value))}
+                    className="w-full h-1 bg-border-base appearance-none cursor-pointer accent-[var(--color-text-main)] hover:accent-primary block mt-3 mb-2"
                 />
+
+                <div className="flex justify-between items-center text-[10px] font-mono lab-text-muted">
+                    <span>{MIN_BPM}</span>
+                    <button
+                        onClick={tapTempo}
+                        className="px-3 py-1 border border-border-base bg-surface lab-text-muted hover:border-primary hover:text-primary active:bg-primary active:text-white uppercase tracking-widest transition-colors"
+                    >
+                        TAP{tapCount > 0 && ` · ${tapCount}`}
+                    </button>
+                    <span>{MAX_BPM}</span>
+                </div>
             </div>
 
-            <button 
+            <button
                 onClick={togglePlay}
                 className={`
                     w-24 h-24 flex items-center justify-center font-bold tracking-widest border transition-all text-sm
@@ -160,6 +216,33 @@ export default function Sequencer() {
                 `}
             >
                 {isPlaying ? 'STOP' : 'RUN'}
+            </button>
+        </div>
+      </div>
+
+      {/* Preset Bank */}
+      <div className="mb-6">
+        <label className="lab-label block mb-2">PATTERN_BANK</label>
+        <div className="flex flex-wrap gap-px bg-border-base border border-border-base">
+            {PRESETS.map((preset) => (
+                <button
+                    key={preset.name}
+                    onClick={() => loadPreset(preset.name, preset.grid)}
+                    className={`
+                        flex-1 min-w-[80px] px-3 py-2 text-[10px] font-mono uppercase tracking-widest transition-colors
+                        ${activePreset === preset.name
+                            ? 'bg-[var(--color-text-main)] text-[var(--color-bg-panel)] font-bold'
+                            : 'bg-surface lab-text-muted hover:bg-[var(--color-bg-app)] hover:text-[var(--color-text-main)]'}
+                    `}
+                >
+                    {preset.name}
+                </button>
+            ))}
+            <button
+                onClick={clearGrid}
+                className="flex-1 min-w-[80px] px-3 py-2 text-[10px] font-mono uppercase tracking-widest bg-surface lab-text-muted hover:bg-red-500 hover:text-white transition-colors"
+            >
+                CLEAR
             </button>
         </div>
       </div>
@@ -214,6 +297,11 @@ export default function Sequencer() {
                 </div>
             ))}
          </div>
+      </div>
+
+      <div className="mt-8 flex gap-8 text-[10px] font-mono lab-text-muted border-t border-border-base pt-4 uppercase tracking-widest">
+          <div>KIT: <span className={kitStatus === 'fallback' ? 'text-red-500 font-bold' : 'lab-text-main'}>{KIT_LABEL[kitStatus]}</span></div>
+          <div>PATTERN: <span className="lab-text-main">{activePreset ?? 'CUSTOM'}</span></div>
       </div>
 
     </div>

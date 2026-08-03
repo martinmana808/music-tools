@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import './index.css';
 
-import TapTempo from './components/TapTempo';
 import Metronome from './components/Metronome';
 import Tuner from './components/Tuner';
 import Sequencer from './components/Sequencer';
@@ -14,7 +13,7 @@ const PlaceHolder = ({ title }: { title: string }) => (
 );
 
 function App() {
-  const [activeTab, setActiveTab] = useState<'tuner' | 'tempo' | 'metronome' | 'practice' | 'sequencer'>('tuner');
+  const [activeTab, setActiveTab] = useState<'tuner' | 'metronome' | 'practice' | 'sequencer'>('tuner');
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('theme') as 'light' | 'dark' || 'light';
@@ -42,7 +41,6 @@ function App() {
   const renderContent = () => {
     switch (activeTab) {
       case 'tuner': return <Tuner />;
-      case 'tempo': return <TapTempo />;
       case 'metronome': return <Metronome />;
       case 'practice': return (
         <PracticePlayer 
@@ -56,7 +54,7 @@ function App() {
     }
   };
 
-  const navItems = ['tuner', 'tempo', 'metronome', 'practice', 'sequencer'] as const;
+  const navItems = ['tuner', 'metronome', 'practice', 'sequencer'] as const;
 
   return (
     <div className="min-h-screen font-sans bg-background text-[var(--color-text-main)] transition-colors duration-200">
